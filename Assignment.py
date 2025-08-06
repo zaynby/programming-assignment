@@ -94,8 +94,6 @@ def initialize_game(game_map, fog, player):
     player['copper_sales'] = 0
     player['silver_sales'] = 0
     player['gold_sales'] = 0
-    
-    clear_fog(player,fog)
 #GP calculator per node
 def GP_calculator():
     cp_sale = player['copper_collected'] * randint(prices['copper'][0],prices['copper'][1])
@@ -160,6 +158,9 @@ def show_information(player):
     print(f'Name: {player['name']}')
     print(f'portal position: ({player['x']},{player['y']})')
     print(f'pickaxe level: {player['pickaxe_level']} ({player['mining_type']})')
+    print(f'Gold: {player['gold_collected']}')
+    print(f'Silver: {player['silver_collected']}')
+    print(f'Copper: {player['copper_collected']}')
     print('------------------------------')
     print(f'Load: {player['current_load']}/{player['bag_capacity']}')
     print('------------------------------')
@@ -170,11 +171,12 @@ def show_information(player):
 
 # This function saves the game
 def save_game(game_map, fog, player):
+    paths = 'Assignment\\'
+    files = open(paths + 'map_state.txt','w')
     # save map
-       
+    print(files.write(str(game_map)))
     # save fog
     # save player
-    return
 # This function loads the game
 def load_game(game_map, fog, player):
     # load map
@@ -221,6 +223,7 @@ def show_general_shop_menu():
                 if player['GP'] >= player['bag_capacity'] * 2:
                     print(f"Congratulations! You can now carry {player['bag_capacity'] + 2} items!")
                     player['GP'] = player['GP'] - (player['bag_capacity'] * 2)
+                    player['bag_capacity'] = player['bag_capacity'] + 2
                 else:
                     print("You do not enough GP go and mine for more.")
             elif backpack_shop_action.lower() == 'l':
@@ -368,15 +371,17 @@ while quit_game != True:
                 continue
             #2.3 Mine map
             elif town_action_choice.lower() == 'm':
-                mine_map()
+                clear_fog( player,fog)
             #2.4 Enter mine
             elif town_action_choice.lower() == 'e':
                 in_mine = True
+                fog[player['y']] = fog[player['y']][:player['x']] + 'M' + fog[player['y']][player['x'] + 1:]
                 print("---------------------------------------------------")
                 print('{:^51}'.format('Day ' + str(player['day'])))
                 print("---------------------------------------------------")
                 mining_info()
                 while in_mine == True:
+                    fog[player['y']] = fog[player['y']][:player['x']] + game_map[player['y']][player['x'] - 1] + fog[player['y']][player['x'] + 1:]
                     mining_action = input("Action? ")
                     if player['current_load'] == player['bag_capacity']:
                         print("-----------------------------------------------------------")
@@ -444,11 +449,116 @@ while quit_game != True:
                                 player['turns'] = player['turns'] - 1
                                 player['steps'] = player['steps'] + 1
                                 mining_info()
+            #save game
+            elif town_action_choice.lower() == 'v':
+                save_game(game_map,fog,player)
+                print('game saved')
             #quit to main menu
             elif town_action_choice.lower() == 'q':
-                quit_game = True
-    #elif game_choice.lower() == 'l':
-    #elif game_choice.lower() == 'q':
-        #break
-    #else:
-        #print("What you have entered is not 'n', 'l', 'q' please try again")
+                break
+    elif game_choice.lower() == 'l':
+        filename = 'map_state.txt'
+        in_town = True
+        while in_town != False:
+            player['turns'] = TURNS_PER_DAY
+            show_town_menu()
+            town_action_choice = str(input('Your choice? '))
+        #2.1 Buy Stuff    
+            if town_action_choice.lower() == 'b':
+                show_general_shop_menu()
+            #2.2. See Player Information
+            elif town_action_choice.lower() == 'i':
+                show_information(player)
+                continue
+            #2.3 Mine map
+            elif town_action_choice.lower() == 'm':
+                clear_fog( player,fog)
+            #2.4 Enter mine
+            elif town_action_choice.lower() == 'e':
+                in_mine = True
+                fog[player['y']] = fog[player['y']][:player['x']] + 'M' + fog[player['y']][player['x'] + 1:]
+                print("---------------------------------------------------")
+                print('{:^51}'.format('Day ' + str(player['day'])))
+                print("---------------------------------------------------")
+                mining_info()
+                while in_mine == True:
+                    fog[player['y']] = fog[player['y']][:player['x']] + game_map[player['y']][player['x'] - 1] + fog[player['y']][player['x'] + 1:]
+                    mining_action = input("Action? ")
+                    if player['current_load'] == player['bag_capacity']:
+                        print("-----------------------------------------------------------")
+                        print("You can't carry any more, so you can't go that way.")
+                        print("You are exhausted.")
+                        print("You place your portal stone here and zap back to town.")
+                        GP_calculator()
+                        print(f"You sell {player['copper_collected']} copper ore for {player['copper_sales']} GP.")
+                        print(f"You sell {player['silver_collected']} copper ore for {player['silver_sales']} GP.")
+                        print(f"You sell {player['gold_collected']} copper ore for {player['gold_sales']} GP.")
+                        print(f"You now have {player['GP']} GP.")
+                        fog[player['y']] = fog[player['y']][:player['x']] + 'P' + fog[player['y']][player['x'] + 1:]
+                        player['day'] = player['day'] + 1
+                        player['copper_collected'] = 0
+                        player['silver_collected'] = 0
+                        player['gold_collected'] = 0
+                        player['current_load'] = 0
+                        in_mine = False
+                    else:
+                        if mining_action.lower() == 'm':
+                            clear_fog(player,fog)
+                        elif mining_action.lower() == 'i':
+                            show_information(player)
+                            draw_view(game_map,fog,player)
+                        elif mining_action.lower() == 'q':
+                            show_main_menu()
+                            game_choice = str(input('Your choice? '))
+                            break
+                        elif mining_action.lower() == 'p':
+                            portal_stone()
+                            in_mine = False
+                        elif mining_action.lower() == 'w':
+                            if player['y'] == 0:
+                                print("You are already at the top")
+                                continue
+                            else:
+                                player['y'] = player['y'] + 1
+                                player['turns'] = player['turns'] - 1
+                                player['steps'] = player['steps'] + 1
+                                mining_info()
+                        elif mining_action.lower() == 'a':
+                            if player['x'] == 0:
+                                print("You are at the edge already")
+                                continue
+                            else:
+                                player['x'] = player['x'] - 1
+                                mining_info()
+                                player['turns'] = player['turns'] - 1
+                                player['steps'] = player['steps'] + 1
+                                mining_info()
+                        elif mining_action.lower() == 's':
+                            if player['y'] == len(game_map) - 1:
+                                print("You are at the edge already")
+                                continue
+                            else:
+                                player['y'] = player['y'] + 1
+                                player['turns'] = player['turns'] - 1
+                                player['steps'] = player['steps'] + 1
+                                mining_info()
+                        elif mining_action.lower() == 'd':
+                            if player['x'] == len(game_map[0]) - 1:
+                                continue
+                            else: 
+                                player['x'] = player['x'] + 1
+                                player['turns'] = player['turns'] - 1
+                                player['steps'] = player['steps'] + 1
+                                mining_info()
+            #save game
+            elif town_action_choice.lower() == 'v':
+                save_game(game_map,fog,player)
+                print('game saved')
+                break
+            #quit to main menu
+            elif town_action_choice.lower() == 'q':
+                break
+    elif game_choice.lower() == 'q':
+        break
+    else:
+        print("What you have entered is not 'n', 'l', 'q' please try again")
