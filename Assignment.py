@@ -171,6 +171,7 @@ def show_information(player):
 # This function saves the game
 def save_game(game_map, fog, player):
     # save map
+       
     # save fog
     # save player
     return
@@ -447,7 +448,6 @@ while quit_game != True:
             elif town_action_choice.lower() == 'q':
                 quit_game = True
     #elif game_choice.lower() == 'l':
-
     #elif game_choice.lower() == 'q':
         #break
     #else:
