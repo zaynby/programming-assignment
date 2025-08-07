@@ -84,7 +84,6 @@ def initialize_game(game_map, fog, player):
     player['copper_collected'] = 0
     player['silver_collected'] = 0
     player['gold_collected'] = 0
-    player['day'] = 1
     player['turns'] = TURNS_PER_DAY
     player['steps'] = 0
     player['current_load'] = 0
@@ -172,24 +171,44 @@ def show_information(player):
 # This function saves the game
 def save_game(game_map, fog, player):
     paths = 'Assignment\\'
-    files = open(paths + 'map_state.txt','w')
+    map_files = open(paths + 'map_state.txt','w')
+    player_file = open(paths + 'player_state.txt','w')
+    fog_files = open(paths + 'fog_state.txt','w')
     # save map
-    print(files.write(str(game_map)))
+    map_files.write(str(game_map))
     # save fog
+    fog_files.write(str(fog))
     # save player
+    player_file.write(str(player))
+    map_files.close()
+    player_file.close()
+    fog_files.close()
 # This function loads the game
 def load_game(game_map, fog, player):
     # load map
+    try:
+        map_struct = []
+        load_map('map_state.txt', map_struct)
+    except FileNotFoundError:
+        print("File not found")
     # load fog
+
     # load player
-    return
+    try:
+        paths = 'Assignment\\'
+        player_file = open(paths + 'player_state.txt','r')
+        load_player = player_file.readlines()
+        player == load_player
+    except FileNotFoundError:
+        print("file is not found")
+        return
 
 def show_main_menu():
     print()
     print("--- Main Menu ----")
     print("(N)ew game")
     print("(L)oad saved game")
-#    print("(H)igh scores")
+    print("(H)igh scores")
     print("(Q)uit")
     print("------------------")
 
@@ -229,6 +248,23 @@ def show_general_shop_menu():
             elif backpack_shop_action.lower() == 'l':
                 in_backpack_shop = False
                 return
+    elif shop_action_choice.lower() == 'p':
+        if player['mining_type'] == 'copper':
+            if player['GP'] >= pickaxe_price[0]:
+                print("Congratulations! You can now mine silver!")
+                player['GP'] = player['GP'] - pickaxe_price[0]
+                player['mining_type'] = 'silver'
+            else:
+                print("You do not have enough GP go out and mine for more")
+        elif player['mining_type'] == 'silver':
+            if player['GP'] >= pickaxe_price[1]:
+                print("Congratulations! You can now mine silver!")
+                player['GP'] = player['GP'] - pickaxe_price[1]
+                player['mining_type'] = 'gold'
+            else:
+                print("You do not have enough GP go out and mine for more")
+    else:
+        print("Your pickaxe is already at max level")
 #2.1.1 Backpack upgrade menu
 def show_backpack_shop_menu():
     print('----------------------- Shop Menu -------------------------')
@@ -248,12 +284,15 @@ def portal_stone():
         print(f"You sell {player['silver_collected']} copper ore for {player['silver_sales']} GP.")
         print(f"You sell {player['gold_collected']} copper ore for {player['gold_sales']} GP.")
         print(f"You now have {player['GP']} GP.")
-        if player['GP'] >= 500:
+        if player['GP'] >= WIN_GP:
             print("-----------------------------------------------------")
             print(f"Woo-hoo! Well done, {player['name']}, you have {player['GP']} GP!")
             print("You now have enough to retire and play video games every day.")
             print(f"And it only took you player {player['days']} days and {player['steps']} steps! You win!")
             print('---------------------------------------------------')
+            path = 'Assignment\\'
+            highscore = open(path + 'high_score.txt','w')
+            highscore.write(str(player['day']+player['steps']))
             in_town == False
         else:
             fog[player['y']] = fog[player['y']][:player['x']] + 'P' + fog[player['y']][player['x'] + 1:]
@@ -267,7 +306,7 @@ def portal_stone():
 def mine_map():
 #Border lines
     border = '+'
-    for wid in range(MAP_WIDTH):
+    for wid in range(30):
         border += '-'
     border += '+'
     print(border)
@@ -279,11 +318,10 @@ def mine_map():
             print(fog[row])
 #Border lines
     border = '+'
-    for wid in range(MAP_WIDTH):
+    for wid in range(30):
         border += '-'
     border += '+'
     print(border)
-
 #mining information 
 def mining_info():
     draw_view(game_map,fog,player)
@@ -309,6 +347,7 @@ def mining_checker():
                 player['latest_mine'][0] = (player['bag_capacity'] - player['current_load'])
                 player['copper_collected'] = player['copper_collected'] + (player['bag_capacity'] - player['current_load'])
                 player['current_load'] = player['bag_capacity']
+                game_map[player['y']][player['x']] = ' '
                 return
             else:
                 player['copper_collected'] = int(player['latest_mine'][0]) + player['copper_collected']
@@ -320,6 +359,7 @@ def mining_checker():
                 if player['latest_mine'][0] >= player['bag_capacity'] - player['current_load']:
                     player['latest_mine'][0] = (player['bag_capacity'] - player['current_load'])
                     player['silver_collected'] = (player['bag_capacity'] - player['current_load'])
+                    game_map[player['y']][player['x']] = ' '
                     return
                 else:
                     player['silver_collected'] = int(player['latest_mine'][0]) + player['silver_collected']
@@ -331,6 +371,7 @@ def mining_checker():
                 if player['latest_mine'][0] >= player['bag_capacity'] - player['current_load']:
                     player['latest_mine'][0] = (player['bag_capacity'] - player['current_load'])
                     player['gold_collected'] = (player['bag_capacity'] - player['current_load'])
+                    game_map[player['y']][player['x']] = ' '
                     return
                 else:    
                     player['gold_collected'] = int(player['latest_mine'][0]) + player['gold_collected']
@@ -457,7 +498,7 @@ while quit_game != True:
             elif town_action_choice.lower() == 'q':
                 break
     elif game_choice.lower() == 'l':
-        filename = 'map_state.txt'
+        load_game(game_map,fog,player)
         in_town = True
         while in_town != False:
             player['turns'] = TURNS_PER_DAY
@@ -560,5 +601,10 @@ while quit_game != True:
                 break
     elif game_choice.lower() == 'q':
         break
+    elif game_choice.lower() == 'h':
+        path = 'Assignment\\'
+        load_high_score = open(path + 'high_score.txt','r')
+        score_list = load_high_score.readlines()
+        print(score_list)
     else:
         print("What you have entered is not 'n', 'l', 'q' please try again")
