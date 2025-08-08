@@ -292,7 +292,7 @@ def portal_stone():
             print('---------------------------------------------------')
             path = 'Assignment\\'
             highscore = open(path + 'high_score.txt','w')
-            highscore.write(str(player['day']+player['steps']))
+            highscore.write(f'{player['day']+player['steps']}\n')
             in_town == False
         else:
             fog[player['y']] = fog[player['y']][:player['x']] + 'P' + fog[player['y']][player['x'] + 1:]
@@ -602,9 +602,12 @@ while quit_game != True:
     elif game_choice.lower() == 'q':
         break
     elif game_choice.lower() == 'h':
+        high_score_list = ''
         path = 'Assignment\\'
         load_high_score = open(path + 'high_score.txt','r')
         score_list = load_high_score.readlines()
-        print(score_list)
+        for i in range(len(score_list)):
+            high_score_list += f'{score_list[i]}\n'
+            print(high_score_list)
     else:
         print("What you have entered is not 'n', 'l', 'q' please try again")
