@@ -46,17 +46,23 @@ def load_map(filename, map_struct):
 # This function clears the fog of war at the 3x3 square around the player
 def clear_fog(player,fog):
     for y in range(player['y'] - 1 ,player['y'] + 2):
-        if y == -1:
-            continue
         for x in range(player['x'] - 1 ,player['x'] + 2):
-            if x == 0:
-                continue
+            if player['x'] == 0 and player['y'] == 0:
+                fog[0] = fog[0][0] + 'M' + game_map[0][2] + fog[0][3:]
+                fog[1] = fog[1][0] + game_map[1][1:3] + fog[1][3:]              
             elif x == player['x'] and y == player['y']:
-                    fog[player['y']] = fog[player['y']][:player['x']] + 'M' + fog[player['y']][player['x'] + 1:]
-            else:
-                fog[y] = fog[y][:x] + game_map[y][x] + fog[y][x+1:] 
+                fog[player['y']] = fog[player['y']][:player['x']] + 'M' + fog[player['y']][player['x']+1:]               
+            elif player['x'] == 0:
+                fog[player['y']-1] = fog[player['y']-1][:1] + game_map[player['y']-1][player['x']] + game_map[player['y']-1][player['x']+1] + fog[player['y']-1][player['x']+3:]
+                fog[player['y']] = fog[y][:2] + game_map[player['y']][player['x']+1] + fog[player['y']][player['x']+3:]
+                fog[player['y']+1] = fog[player['y']+1][:1] + game_map[player['y']-1][player['x']] + game_map[player['y']+1][player['x']+1] + fog[player['y']+1][player['x']+3:]
+            elif player['y'] == 0:
+                fog[player['y']] = fog[player['y']][:player['x']] + game_map[player['y']][player['x']-1]+ 'M' + game_map[player['y']][player['x']+1]+fog[player['y']][player['x']+3:]
+                fog[player['y']+1] = fog[1][:x] + game_map[1][player['x']-1] + game_map[1][player['x']] + game_map[1][player['x'] + 1] + fog[1][player['x']+3:]
+            else:    
+                fog[y] = fog[y][:x] + game_map[x][y] + fog[y][x+1:]
     mine_map()
-    fog[player['y']] = fog[player['y']][:player['x']] + game_map[player['y']][player['x'] - 1] + fog[player['y']][player['x'] + 1:]     
+    fog[player['y']] = fog[player['y']][:player['x']] + game_map[player['y']][player['x']] + fog[player['y']][player['x'] + 1:]     
     return
 
 def initialize_game(game_map, fog, player):
@@ -71,6 +77,7 @@ def initialize_game(game_map, fog, player):
         fog_row += '|'
         fog.append(fog_row)
         fog_row = '|'
+    
     # TODO: initialize player
     #You will probably add other entries into the player dictionary
     player['pickaxe_level'] = 1
@@ -79,7 +86,7 @@ def initialize_game(game_map, fog, player):
     player['name'] = str(input("Greetings, miner! What is your name? "))
     print(f'Pleased to meet you, {player['name']}. Welcome to Sundrop Town!')
     player['GP'] = 0
-    player['x'] = 5
+    player['x'] = 0
     player['y'] = 0
     player['copper_collected'] = 0
     player['silver_collected'] = 0
@@ -138,7 +145,7 @@ def draw_view(game_map, fog, player):
             fog_of_war += '###|\n'
             break
         for x in range(player['x'] - 1 ,player['x'] + 2):
-            if x == 0:
+            if x == -1:
                 fog_of_war += '#'
             elif x == player['x'] and y == player['y']:
                 fog_of_war += 'M'
@@ -347,10 +354,11 @@ def mining_checker():
                 player['latest_mine'][0] = (player['bag_capacity'] - player['current_load'])
                 player['copper_collected'] = player['copper_collected'] + (player['bag_capacity'] - player['current_load'])
                 player['current_load'] = player['bag_capacity']
-                game_map[player['y']][player['x']] = ' '
+                game_map[player['y']] = game_map[player['y']][:player['x']] + ' ' + game_map[player['y']][player['x'] + 1:]
                 return
             else:
                 player['copper_collected'] = int(player['latest_mine'][0]) + player['copper_collected']
+                game_map[player['y']] = game_map[player['y']][:player['x']] + ' ' + game_map[player['y']][player['x'] + 1:]
         elif game_map[player['y']][player['x']] == 'S':
             if player['mining_type'] == 'copper':
                 print('you need to upgrade your pickaxe to mine silver')
@@ -359,10 +367,11 @@ def mining_checker():
                 if player['latest_mine'][0] >= player['bag_capacity'] - player['current_load']:
                     player['latest_mine'][0] = (player['bag_capacity'] - player['current_load'])
                     player['silver_collected'] = (player['bag_capacity'] - player['current_load'])
-                    game_map[player['y']][player['x']] = ' '
+                    game_map[player['y']] = game_map[player['y']][:player['x']] + ' ' + game_map[player['y']][player['x'] + 1:]
                     return
                 else:
                     player['silver_collected'] = int(player['latest_mine'][0]) + player['silver_collected']
+                    game_map[player['y']] = game_map[player['y']][:player['x']] + ' ' + game_map[player['y']][player['x'] + 1:]
         elif game_map[player['y']][player['x']] == 'G':
             if player['mining_type'] == 'copper' or player['mining_type'] == 'silver':
                 print('you need to upgrade your pickaxe to mine silver')
@@ -371,10 +380,11 @@ def mining_checker():
                 if player['latest_mine'][0] >= player['bag_capacity'] - player['current_load']:
                     player['latest_mine'][0] = (player['bag_capacity'] - player['current_load'])
                     player['gold_collected'] = (player['bag_capacity'] - player['current_load'])
-                    game_map[player['y']][player['x']] = ' '
+                    game_map[player['y']] = game_map[player['y']][:player['x']] + ' ' + game_map[player['y']][player['x'] + 1:]
                     return
                 else:    
                     player['gold_collected'] = int(player['latest_mine'][0]) + player['gold_collected']
+                    game_map[player['y']] = game_map[player['y']][:player['x']] + ' ' + game_map[player['y']][player['x'] + 1:]
         player['current_load'] = int(player['copper_collected']) + int(player['silver_collected']) + int(player['gold_collected'])
     return
 
@@ -412,7 +422,7 @@ while quit_game != True:
                 continue
             #2.3 Mine map
             elif town_action_choice.lower() == 'm':
-                clear_fog( player,fog)
+                clear_fog(player,fog)
             #2.4 Enter mine
             elif town_action_choice.lower() == 'e':
                 in_mine = True
@@ -429,6 +439,7 @@ while quit_game != True:
                         print("You can't carry any more, so you can't go that way.")
                         print("You are exhausted.")
                         print("You place your portal stone here and zap back to town.")
+                        fog[player['y']] = fog[player['y']][:player['x']] + 'P' + fog[player['y']][player['x'] + 1:]
                         GP_calculator()
                         print(f"You sell {player['copper_collected']} copper ore for {player['copper_sales']} GP.")
                         print(f"You sell {player['silver_collected']} copper ore for {player['silver_sales']} GP.")
@@ -459,7 +470,7 @@ while quit_game != True:
                                 print("You are already at the top")
                                 continue
                             else:
-                                player['y'] = player['y'] + 1
+                                player['y'] = player['y'] - 1
                                 player['turns'] = player['turns'] - 1
                                 player['steps'] = player['steps'] + 1
                                 mining_info()
@@ -560,7 +571,7 @@ while quit_game != True:
                                 print("You are already at the top")
                                 continue
                             else:
-                                player['y'] = player['y'] + 1
+                                player['y'] = player['y'] - 1
                                 player['turns'] = player['turns'] - 1
                                 player['steps'] = player['steps'] + 1
                                 mining_info()
