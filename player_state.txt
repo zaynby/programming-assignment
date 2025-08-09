@@ -1,0 +1,1 @@
+{'pickaxe_level': 1, 'mining_type': 'copper', 'day': 1, 'name': 'cher', 'GP': 0, 'x': 5, 'y': 0, 'copper_collected': 0, 'silver_collected': 0, 'gold_collected': 0, 'turns': 20, 'steps': 0, 'current_load': 0, 'bag_capacity': 10, 'portal': (5, 0), 'latest_mine': [0, ' '], 'copper_sales': 0, 'silver_sales': 0, 'gold_sales': 0}
