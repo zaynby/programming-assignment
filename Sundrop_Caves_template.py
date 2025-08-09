@@ -22,9 +22,8 @@ prices['gold'] = (10, 18)
 # This function loads a map structure (a nested list) from a file
 # It also updates MAP_WIDTH and MAP_HEIGHT
 def load_map(filename, map_struct):
-    path = 'Assignment\\'
     try:
-        map_file = open(path + filename, 'r')
+        map_file = open(filename, 'r')
         global MAP_WIDTH
         global MAP_HEIGHT
     except FileNotFoundError:
@@ -77,7 +76,7 @@ def initialize_game(game_map, fog, player):
     print(f'Pleased to meet you, {player['name']}. Welcome to Sundrop Town!')
     player['GP'] = 0
     player['x'] = 0
-    player['y'] = 5
+    player['y'] = 0
     player['copper_collected'] = 0
     player['silver_collected'] = 0
     player['gold_collected'] = 0
@@ -163,10 +162,9 @@ def show_information(player):
     return
 # This function saves the game
 def save_game(game_map, fog, player):
-    paths = 'Assignment\\'
-    map_files = open(paths + 'map_state.txt','w')
-    player_file = open(paths + 'player_state.txt','w')
-    fog_files = open(paths + 'fog_state.txt','w')
+    map_files = open('map_state.txt','w')
+    player_file = open('player_state.txt','w')
+    fog_files = open('fog_state.txt','w')
     # save map
     map_files.write(str(game_map))
     # save fog
@@ -188,8 +186,7 @@ def load_game(game_map, fog, player):
 
     # load player
     try:
-        paths = 'Assignment\\'
-        player_file = open(paths + 'player_state.txt','r')
+        player_file = open('player_state.txt','r')
         load_player = player_file.readlines()
         player == load_player
     except FileNotFoundError:
@@ -290,8 +287,7 @@ def portal_stone():
         print("You now have enough to retire and play video games every day.")
         print(f"And it only took you player {player['days']} days and {player['steps']} steps! You win!")
         print('---------------------------------------------------')
-        path = 'Assignment\\'
-        highscore = open(path + 'high_score.txt','w')
+        highscore = open('high_score.txt','w')
         highscore.write(f'{player['day']+player['steps']}\n')
     else:
         print("-----------------------------------------------------")
@@ -396,13 +392,13 @@ def mine_actions():
             show_main_menu()
             game_choice = str(input('Your choice? '))
             break
+        elif mining_action.lower() == 'p':
+            portal_stone()
+            in_mine = False
         elif player['bag_capacity'] == player['current_load']:
             print("-----------------------------------------------------")
             print("You can't carry any more, so you can't go that way.")
             print("Press 'p' to portal back to town to sell your nodes")
-        elif mining_action.lower() == 'p':
-            portal_stone()
-            in_mine = False
         elif mining_action.lower() == 'w':
             if player['y'] == 0:
                 print("You are already at the top")
@@ -488,5 +484,31 @@ while quit_game == False:
                 break
     elif game_choice.lower() == 'l':
         load_game(game_map,fog,player)
+                #ensures that the person is in town
+        in_town = True
+        while in_town == True:
+            player['turns'] = TURNS_PER_DAY
+            show_town_menu()
+            town_action_choice = str(input('Your choice? '))
+            #2.1 Buy Stuff  
+            if town_action_choice.lower() == 'b':                  
+                show_general_shop_menu()
+            #2.2. See Player Information
+            elif town_action_choice.lower() == 'i':
+                show_information(player)
+                continue
+            #2.3 Mine map
+            elif town_action_choice.lower() == 'm':
+                clear_fog(player,fog)
+            #2.4 Enter mine
+            elif town_action_choice.lower() == 'e':
+                mine_actions()
+            #save game
+            elif town_action_choice.lower() == 'v':
+                save_game(game_map,fog,player)
+                print('game saved')
+            #quit to main menu
+            elif town_action_choice.lower() == 'q':
+                break
     elif game_choice.lower() == 'q':
         break
