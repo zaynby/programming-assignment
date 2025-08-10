@@ -14,7 +14,7 @@ minerals = ['copper', 'silver', 'gold']
 mineral_names = {'C': 'copper', 'S': 'silver', 'G': 'gold'}
 pickaxe_price = [50, 150]
 
-prices = {}
+prices = {}  
 prices['copper'] = (1, 3)
 prices['silver'] = (5, 8)
 prices['gold'] = (10, 18)
@@ -175,7 +175,7 @@ def save_game(game_map, fog, player):
     player_file.close()
     fog_files.close()        
 # This function loads the game
-def load_game(game_map, fog, player):
+def load_game(game_map, fog, player):   
     # load map
     try:
         map_struct = []
